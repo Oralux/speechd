@@ -223,14 +223,14 @@ GList *detect_output_modules(const char *dirname, const char *config_dirname)
 				configfile = dotconf_create(file_path, options,
 							    &missing_paths, CASE_INSENSITIVE);
 				if (!configfile) {
-					MSG(5, "Ignoring %s: Can not parse config file %s", file_path);
+					MSG(5, "Ignoring %s: Can not parse config file", file_path);
 					g_free(file_path);
 					continue;
 				}
 				configfile->errorhandler = (dotconf_errorhandler_t) ignore_errors;
 
 				if (dotconf_command_loop(configfile) == 0) {
-					MSG(5, "Ignoring %s: Can not parse config file %s", file_path);
+					MSG(5, "Ignoring %s: Can not parse config file", file_path);
 					g_free(file_path);
 					dotconf_cleanup(configfile);
 					continue;
@@ -420,7 +420,7 @@ OutputModule *load_output_module(char *mod_name, char *mod_prog,
 			return NULL;
 		}
 		assert(rep_line != NULL);
-		MSG(5, "Reply from output module: %d %s", n, rep_line);
+		MSG(5, "Reply from output module: %ld %s", (long) n, rep_line);
 		if (ret <= 4) {
 			MSG(1, "ERROR: Bad syntax from output module %s 2",
 			    module->name);
@@ -569,7 +569,7 @@ int output_module_nodebug(OutputModule * module)
 	if (!module->working)
 		return -1;
 
-	MSG(4, "Output module debug logging off for", module->name);
+	MSG(4, "Output module debug logging off for %s", module->name);
 
 	output_send_debug(module, 0, NULL);
 

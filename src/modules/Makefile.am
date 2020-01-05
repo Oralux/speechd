@@ -153,13 +153,13 @@ sd_kali_LDADD = $(top_builddir)/src/common/libcommon.la \
 	$(audio_dlopen_modules) \
 	-lKali -lKGlobal -lKTrans -lKParle -lKAnalyse \
 	$(common_LDADD)
-sd_kali_CPPFLAGS = $(AM_CPPFLAGS)
+sd_kali_CPPFLAGS = -DLINUX $(AM_CPPFLAGS)
 
 if kali_shim
 sd_kali_LDADD += -L.
 sd_kali_CPPFLAGS += -I$(srcdir)/kali_shim
 
-noinst_HEADERS = kali_shim/kali/Kali/kali.h
+noinst_HEADERS = kali_shim/kali/Kali/kali.h module_utils_speak_queue.h
 
 EXTRA_sd_kali_DEPENDENCIES = libKali.so libKGlobal.so libKTrans.so libKParle.so libKAnalyse.so
 

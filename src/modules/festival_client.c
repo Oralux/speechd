@@ -75,6 +75,8 @@
 /* For testing endianness */
 int fapi_endian_loc = 1;
 
+int festival_connection_crashed;
+
 static char *socket_receive_file_to_buff(int fd, int *size);
 
 /* --- MANAGING FT STRUCTURES --- */
@@ -129,8 +131,11 @@ int save_FT_Wave_snd(FT_Wave * wave, const char *filename)
 	}
 
 	/* write header */
-	if (fwrite(&header, sizeof(header), 1, fd) != 1)
+	if (fwrite(&header, sizeof(header), 1, fd) != 1) {
+		if (fd != stdout)
+			fclose(fd);
 		return -1;
+	}
 	if (FAPI_BIG_ENDIAN)
 		fwrite(wave->samples, sizeof(short), wave->num_samples, fd);
 	else {
@@ -203,6 +208,7 @@ static int festival_socket_open(const char *host, int port)
 		if (serverhost == (struct hostent *)0) {
 			fprintf(stderr,
 				"festival_client: gethostbyname failed\n");
+			close(fd);
 			return -1;
 		}
 		memmove(&serv_addr.sin_addr, serverhost->h_addr,
@@ -213,6 +219,7 @@ static int festival_socket_open(const char *host, int port)
 
 	if (connect(fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) != 0) {
 		fprintf(stderr, "festival_client: connect to server failed\n");
+		close(fd);
 		return -1;
 	}
 

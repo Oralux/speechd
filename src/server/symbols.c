@@ -280,6 +280,10 @@ static gchar *escape_ssml_text(const gchar *text)
 			} else if (in_quote) {
 				if (c == '"')
 					in_quote = 0;
+			} else if (c == '\'') {
+				in_apos = 1;
+			} else if (c == '"') {
+				in_quote = 1;
 			} else {
 				if (c == '>')
 					in_tag = 0;
@@ -593,7 +597,7 @@ static gpointer speech_symbols_new(const gchar *locale)
 
 	for (node = symbols_files; node; node = node->next) {
 		path = g_build_filename(LOCALE_DATA, locale, node->data, NULL);
-		MSG2(5, "symbols", "Trying to load %s for '%s' from '%s'", node->data, locale, path);
+		MSG2(5, "symbols", "Trying to load %s for '%s' from '%s'", (char*) node->data, locale, path);
 		if (speech_symbols_load(ss, path, TRUE) >= 0) {
 			MSG2(5, "symbols", "Successful");
 			/* At least some symbols could be loaded */

@@ -35,6 +35,26 @@ extern char *module_index_mark;
 
 pthread_mutex_t module_stdout_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+int log_level;
+
+AudioID *module_audio_id;
+
+SPDMsgSettings msg_settings;
+SPDMsgSettings msg_settings_old;
+
+int current_index_mark;
+
+int Debug;
+FILE *CustomDebugFile;
+
+configfile_t *configfile;
+configoption_t *module_dc_options;
+int module_num_dc_options;
+
+const char *module_name;
+
+char *module_index_mark;
+
 char *do_message(SPDMessageType msgtype)
 {
 	int ret;
@@ -1067,7 +1087,7 @@ int module_play_file(const char *filename)
 	items = sfinfo.channels * sfinfo.frames;
 	DBG("Frames = %jd, channels = %ld", sfinfo.frames,
 	    (long)sfinfo.channels);
-	DBG("Samplerate = %i, items = %Ld", sfinfo.samplerate,
+	DBG("Samplerate = %i, items = %lld", sfinfo.samplerate,
 	    (long long)items);
 	DBG("Major format = 0x%08X, subformat = 0x%08X, endian = 0x%08X",
 	    sfinfo.format & SF_FORMAT_TYPEMASK, subformat,
@@ -1084,7 +1104,7 @@ int module_play_file(const char *filename)
 	track.bits = 16;
 	track.samples = g_malloc(items * sizeof(short));
 	readcount = sf_read_short(sf, (short *)track.samples, items);
-	DBG("Read %Ld items from audio file.", (long long)readcount);
+	DBG("Read %lld items from audio file.", (long long)readcount);
 
 	if (readcount > 0) {
 		track.num_samples = readcount / sfinfo.channels;

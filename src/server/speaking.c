@@ -46,6 +46,16 @@ static SPDPriority highest_priority = 0;
 int SPEAKING = 0;
 int poll_count;
 
+OutputModule *speaking_module;
+int speaking_uid;
+int speaking_gid;
+
+/* Pause and resume handling */
+int pause_requested;
+int pause_requested_fd;
+int pause_requested_uid;
+int resume_requested;
+
 /*
   Speak() is responsible for getting right text from right
   queue in right time and saying it loud through the corresponding
@@ -341,7 +351,7 @@ int reload_message(TSpeechDMessage * msg)
 		im += client_settings->pause_context;
 
 		MSG2(5, "index_marking",
-		     "Requested index mark (with context) is %d (%d+%d)", im,
+		     "Requested index mark (with context) is %d (%s+%d)", im,
 		     msg->settings.index_mark, client_settings->pause_context);
 		if (im < 0) {
 			im = 0;
@@ -540,7 +550,7 @@ int speaking_pause(int fd, int uid)
 	settings->paused = 1;
 
 	if (speaking_uid != uid) {
-		MSG(5, "given uid %d not speaking_uid", speaking_uid, uid);
+		MSG(5, "given uid %d not speaking_uid %d", uid, speaking_uid);
 		return 0;
 	}
 
