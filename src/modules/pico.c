@@ -43,7 +43,8 @@
 
 DECLARE_DEBUG();
 
-#define MAX_OUTBUF_SIZE		(128)
+#define MIN_OUTBUF_SIZE		(1600)
+#define MAX_OUTBUF_SIZE		(3200)
 #define PICO_MEM_SIZE			(10000000)
 
 #define PICO_VOICE_SPEED_MIN		(20)
@@ -159,6 +160,7 @@ static int pico_set_pitch(signed int value)
 static int pico_process_tts(void)
 {
 	pico_Int16 bytes_sent, bytes_recv, text_remaining, out_data_type;
+	pico_Int16 bytes_stored;
 	int ret, getstatus;
 	short outbuf[MAX_OUTBUF_SIZE];
 	pico_Retstring outMessage;
@@ -185,15 +187,19 @@ static int pico_process_tts(void)
 			    outMessage);
 			return -1;
 		}
+		DBG(MODULE_NAME " Sent %d bytes\n", bytes_sent);
 
 		text_remaining -= bytes_sent;
 		buf += bytes_sent;
+		bytes_stored = 0;
 
 		do {
 			/* Retrieve the samples and add them to the buffer.
 			   SVOX pico TTS sample rate is 16K */
-			getstatus = pico_getData(picoEngine, (void *)outbuf,
-						 MAX_OUTBUF_SIZE, &bytes_recv,
+			getstatus = pico_getData(picoEngine,
+						 (void *)outbuf + bytes_stored,
+						 MAX_OUTBUF_SIZE - bytes_stored,
+						 &bytes_recv,
 						 &out_data_type);
 			if ((getstatus != PICO_STEP_BUSY)
 			    && (getstatus != PICO_STEP_IDLE)) {
@@ -205,11 +211,12 @@ static int pico_process_tts(void)
 				return -1;
 			}
 
-			if (bytes_recv) {
-				track.num_samples = bytes_recv / 2;
-				track.samples =
-				    (short *)g_memdup((gconstpointer) outbuf,
-						      bytes_recv);
+			bytes_stored += bytes_recv;
+
+			if (bytes_stored >= MIN_OUTBUF_SIZE
+					|| PICO_STEP_BUSY != getstatus) {
+				track.num_samples = bytes_stored / 2;
+				track.samples = outbuf;
 				track.num_channels = 1;
 				track.sample_rate = PICO_SAMPLE_RATE;
 				track.bits = 16;
@@ -222,6 +229,7 @@ static int pico_process_tts(void)
 					    "Can't play track for unknown reason.");
 					return -1;
 				}
+				bytes_stored = 0;
 			}
 			if (g_atomic_int_get(&pico_state) != STATE_PLAY) {
 				text_remaining = 0;

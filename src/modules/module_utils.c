@@ -338,7 +338,11 @@ char *do_audio(void)
 				    else
 				SET_AUDIO_STR(audio_nas_server, 3)
 				    else
+				      /* TODO: restore AudioPulseServer option
 				SET_AUDIO_STR(audio_pulse_server, 4)
+				    else
+				    */
+				SET_AUDIO_STR(audio_pulse_device, 4)
 				    else
 				SET_AUDIO_STR(audio_pulse_min_length, 5)
 				    else
@@ -580,7 +584,7 @@ module_get_message_part(const char *message, char *part, unsigned int *pos,
 			    || (message[*pos + 1] == '\n')
 			    || (message[*pos + 1] == '\r')) {
 				for (n = 0; n <= num_dividers - 1; n++) {
-					if ((part[i] == dividers[n])) {
+					if (part[i] == dividers[n]) {
 						part[i + 1] = 0;
 						(*pos)++;
 						return i + 1;

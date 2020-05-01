@@ -185,6 +185,7 @@ GLOBAL_FDSET_OPTION_CB_STR(DefaultModule, output_module)
     GLOBAL_FDSET_OPTION_CB_STR(AudioALSADevice, audio_alsa_device)
     GLOBAL_FDSET_OPTION_CB_STR(AudioNASServer, audio_nas_server)
     GLOBAL_FDSET_OPTION_CB_STR(AudioPulseServer, audio_pulse_server)
+    GLOBAL_FDSET_OPTION_CB_STR(AudioPulseDevice, audio_pulse_device)
     GLOBAL_FDSET_OPTION_CB_INT(AudioPulseMinLength, audio_pulse_min_length, 1, "")
 
     GLOBAL_FDSET_OPTION_CB_INT(DefaultRate, msg_settings.rate, (val >= -100)
@@ -207,7 +208,7 @@ GLOBAL_FDSET_OPTION_CB_STR(DefaultModule, output_module)
     GLOBAL_FDSET_OPTION_CB_SPECIAL(DefaultPunctuationMode,
 			       msg_settings.punctuation_mode, SPDPunctuation,
 			       str2EPunctMode)
-    GLOBAL_FDSET_OPTION_CB_INT(DefaultSymbolsPreprocessing, symbols_preprocessing,
+    GLOBAL_FDSET_OPTION_CB_INT(DefaultSymbolsPreproc, symbols_preprocessing,
 			       val == FALSE || val == TRUE,
 			       "Whether to use server-side symbols pre-processing")
     GLOBAL_FDSET_OPTION_CB_SPECIAL(DefaultCapLetRecognition,
@@ -302,15 +303,41 @@ DOTCONF_CB(cb_CustomLogFile)
 	return NULL;
 }
 
-DOTCONF_CB(cb_SymbolPreprocessingFile)
+DOTCONF_CB(cb_SymbolPreprocFile)
 {
 	if (cmd->data.list[0] == NULL) {
 		MSG(3,
-		    "No symbol preprocessing name specified in configuration under SymbolsPreprocessingFile");
+		    "No symbol preprocessing name specified in configuration under SymbolsPreprocFile");
 		return NULL;
 	}
 
 	symbols_preprocessing_add_file(cmd->data.list[0]);
+
+	return NULL;
+}
+
+DOTCONF_CB(cb_CharSymbolPreprocFile)
+{
+	if (cmd->data.list[0] == NULL) {
+		MSG(3,
+		    "No char symbol preprocessing name specified in configuration under CharSymbolsPreprocFile");
+		return NULL;
+	}
+
+	symbols_char_preprocessing_add_file(cmd->data.list[0]);
+
+	return NULL;
+}
+
+DOTCONF_CB(cb_PunctuationSymbolPreprocFile)
+{
+	if (cmd->data.list[0] == NULL) {
+		MSG(3,
+		    "No punctuation symbol preprocessing name specified in configuration under PunctuationSymbolsPreprocFile");
+		return NULL;
+	}
+
+	symbols_punctuation_preprocessing_add_file(cmd->data.list[0]);
 
 	return NULL;
 }
@@ -441,8 +468,10 @@ configoption_t *load_config_options(int *num_options)
 	ADD_CONFIG_OPTION(DefaultPriority, ARG_STR);
 	ADD_CONFIG_OPTION(MaxHistoryMessages, ARG_INT);
 	ADD_CONFIG_OPTION(DefaultPunctuationMode, ARG_STR);
-	ADD_CONFIG_OPTION(DefaultSymbolsPreprocessing, ARG_INT);
-	ADD_CONFIG_OPTION(SymbolPreprocessingFile, ARG_STR);
+	ADD_CONFIG_OPTION(DefaultSymbolsPreproc, ARG_INT);
+	ADD_CONFIG_OPTION(SymbolPreprocFile, ARG_STR);
+	ADD_CONFIG_OPTION(CharSymbolPreprocFile, ARG_STR);
+	ADD_CONFIG_OPTION(PunctuationSymbolPreprocFile, ARG_STR);
 	ADD_CONFIG_OPTION(DefaultClientName, ARG_STR);
 	ADD_CONFIG_OPTION(DefaultVoiceType, ARG_STR);
 	ADD_CONFIG_OPTION(DefaultSpelling, ARG_TOGGLE);
@@ -456,6 +485,7 @@ configoption_t *load_config_options(int *num_options)
 	ADD_CONFIG_OPTION(AudioALSADevice, ARG_STR);
 	ADD_CONFIG_OPTION(AudioNASServer, ARG_STR);
 	ADD_CONFIG_OPTION(AudioPulseServer, ARG_STR);
+	ADD_CONFIG_OPTION(AudioPulseDevice, ARG_STR);
 	ADD_CONFIG_OPTION(AudioPulseMinLength, ARG_INT);
 
 	ADD_CONFIG_OPTION(BeginClient, ARG_STR);
@@ -491,7 +521,8 @@ void load_default_global_set_options()
 	GlobalFDSet.audio_alsa_device = g_strdup("default");
 	GlobalFDSet.audio_nas_server = g_strdup("tcp/localhost:5450");
 	GlobalFDSet.audio_pulse_server = g_strdup("default");
-	GlobalFDSet.audio_pulse_min_length = 100;
+	GlobalFDSet.audio_pulse_device = g_strdup("default");
+	GlobalFDSet.audio_pulse_min_length = 10;
 
 	SpeechdOptions.max_history_messages = 10000;
 
