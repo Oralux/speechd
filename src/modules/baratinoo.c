@@ -2,7 +2,7 @@
  * baratinoo.c - Speech Dispatcher backend for Baratinoo (VoxyGen)
  *
  * Copyright (C) 2016 Brailcom, o.p.s.
- * Copyright (C) 2019 Samuel Thibault <samuel.thibault@ens-lyon.org>
+ * Copyright (C) 2019-2020 Samuel Thibault <samuel.thibault@ens-lyon.org>
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -477,11 +477,25 @@ int module_speak(gchar *data, size_t bytes, SPDMessageType msgtype)
 	}
 
 	switch (msgtype) {
-	case SPD_MSGTYPE_SPELL: /* FIXME: use \spell one day? */
+	case SPD_MSGTYPE_SPELL:	/* FIXME: use \spell when Voxygen actuall implements it */
+				/* TODO: in the meanwhile use a generic engine */
 	case SPD_MSGTYPE_CHAR:
 		g_string_append(buffer, "\\sayas<{characters}");
 		g_string_append_len(buffer, data, bytes);
 		g_string_append(buffer, "\\sayas>{}");
+		break;
+	case SPD_MSGTYPE_KEY:	/* TODO: use a generic engine */
+		if (g_utf8_strlen(data, bytes) == 1) {
+			g_string_append(buffer, "\\sayas<{characters}");
+			g_string_append_len(buffer, data, bytes);
+			g_string_append(buffer, "\\sayas>{}");
+		} else {
+			gchar *c;
+			g_string_append_len(buffer, data, bytes);
+			for (c = buffer->str; *c; c++)
+				if (*c == '_')
+					*c = ' ';
+		}
 		break;
 	default: /* FIXME: */
 	case SPD_MSGTYPE_TEXT:
@@ -1163,7 +1177,7 @@ static void ssml2baratinoo_end_element(GMarkupParseContext *ctx,
  * they affect speech as means of intonation and pauses.
  *
  * The approach here is that for every punctuation character included in the
- * selected mode (none/some/all), we wrap it in "\sayas<{characters}" markup
+ * selected mode (none/some/most/all), we wrap it in "\sayas<{characters}" markup
  * so that it is spoken by the engine.  But in order to keep the punctuation
  * meaning of the character, in case it has some, we duplicate it outside the
  * markup with a heuristic on whether it will or not affect speech intonation
@@ -1221,7 +1235,8 @@ static void ssml2baratinoo_text(GMarkupParseContext *ctx,
 
 			/* if punctuation mode is not NONE and the character
 			 * should be spoken, manually wrap it with \sayas */
-			say_as_char = ((msg_settings.punctuation_mode == SPD_PUNCT_SOME &&
+			say_as_char = (((msg_settings.punctuation_mode == SPD_PUNCT_SOME ||
+					 msg_settings.punctuation_mode == SPD_PUNCT_MOST) &&
 					g_utf8_strchr(BaratinooPunctuationList, -1, ch)) ||
 				       (msg_settings.punctuation_mode == SPD_PUNCT_ALL &&
 					g_unichar_ispunct(ch)));

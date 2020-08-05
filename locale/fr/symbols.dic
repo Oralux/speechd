@@ -25,8 +25,7 @@ in-word '	(?<=[^\W_])['’]
 in-word -	(?<=[^\W_])[-]
 between-words -	(?<=\s)[-](?=\s)
 negative number	(?<!\w)-(?=[$£€¥.]?\d)
-dates .	((?<=\b\d\d)\.(?=\d\d.(\d{2}|\d{4})\b))|((?<=\b\d\d.\d\d)\.(?=(\d{2}|\d{4})\b))
-dates /	((?<=\b\d\d)\/(?=\d\d/(\d{2}|\d{4})\b))|((?<=\b\d\d/\d\d)\/(?=(\d{2}|\d{4})\b))
+dates .	\b(\d\d)[/.](\d\d)[/.](\d{2}|\d{4})\b
 
 after-number %	(?<=\d)(\s?\%)(?=\W|$)
 n°	(?<=\b)[nN]°
@@ -35,18 +34,17 @@ symbols:
 # identifier	replacement[[	level][	preserve]][	# display name]
 
 # Complex symbols
-. sentence ending	point	# . fin de phrase
-! sentence ending	point d'exclamation	# ! fin de phrase
-? sentence ending	point d'interrogation	# ? fin de phrase
+. sentence ending	point	all	always	# . fin de phrase
+! sentence ending	point d'exclamation	all	always	# ! fin de phrase
+? sentence ending	point d'interrogation	all	always	# ? fin de phrase
 ... sentence ending	points de suspension	all	always	# ... fin de phrase
 … sentence ending	points de suspension	all	always	# … fin de phrase
-; phrase ending	point virgule	# ; fin de phrase
-: phrase ending	deux points	# : fin de phrase
+; phrase ending	point virgule	all	always	# ; fin de phrase
+: phrase ending	deux points	all	always	# : fin de phrase
 
 decimal point		# virgule décimale
 thousands separator		# point des mille
-dates .	 	all	always	# point de date
-dates /	 	all	always	# barre oblique de date
+dates .	\1 \2 \3 	all	norep	# point de date
 negative number	moins	none	norep	# - devant un nombre
 after-number %	pour cent	none	norep	# % après un nombre
 in-word '	apostrophe	# ' dans un mot
@@ -60,7 +58,7 @@ n°	numéro	none	norep	# numéro
 \n	nouvelle ligne
 \f	saut de page
 \r	retour chariot
- 	espace
+ 	espace	char
  	espace insécable	char	# espace insécable
 
 # Standard punctuation/symbols
@@ -76,11 +74,11 @@ $	dollar
 %	pour cent
 &	et commercial	some	norep
 '	apostrophe
-(	parenthèse gauche
-)	parenthèse droite
+(	parenthèse gauche	all	always
+)	parenthèse droit	all	always
 *	astérisque
 +	pluce	some	norep
-,	virgule
+,	virgule	all	always
 -	tiret
 .	point
 |	bar	most
@@ -110,8 +108,8 @@ _	souligné
 
 # Other characters
 •	puce
-…	points de suspension
-...	point point point
+…	points de suspension	all	always
+...	point point point	all	always
 	puce
 “	guillemet ouvert
 ”	guillemet fermé

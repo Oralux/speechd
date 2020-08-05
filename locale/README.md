@@ -1,5 +1,7 @@
 # How to import symbols dictionaries
 
+* Get gettext version 0.20 or later
+* Install the latest version of orca master by hand
 * Create a directory named symbolsrc in the locale directory of Speech-Dispatcher source tree.
 * Download NVDA sources using this link: (https://github.com/nvaccess/nvda/archive/beta.zip)
 * Extract the archive in the newly created directory which will create a nvda-beta folder

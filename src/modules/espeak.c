@@ -3,7 +3,7 @@
  * espeak.c - Speech Dispatcher backend for espeak
  *
  * Copyright (C) 2007 Brailcom, o.p.s.
- * Copyright (C) 2019 Samuel Thibault <samuel.thibault@ens-lyon.org>
+ * Copyright (C) 2019-2020 Samuel Thibault <samuel.thibault@ens-lyon.org>
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
@@ -298,7 +298,7 @@ int module_speak(gchar * data, size_t bytes, SPDMessageType msgtype)
 			break;
 		}
 	case SPD_MSGTYPE_SPELL:
-		/* TODO: Not sure what to do here... */
+		/* TODO: use a generic engine */
 		break;
 	}
 
@@ -440,6 +440,10 @@ static void espeak_set_punctuation_mode(SPDPunctuation punct_mode)
 	switch (punct_mode) {
 	case SPD_PUNCT_ALL:
 		espeak_punct_mode = espeakPUNCT_ALL;
+		break;
+	case SPD_PUNCT_MOST:
+		/* XXX: Approximation */
+		espeak_punct_mode = espeakPUNCT_SOME;
 		break;
 	case SPD_PUNCT_SOME:
 		espeak_punct_mode = espeakPUNCT_SOME;

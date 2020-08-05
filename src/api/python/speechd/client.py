@@ -455,7 +455,9 @@ class PunctuationMode(object):
     NONE = 'none'
     """Don't read any punctuation character at all."""
     SOME = 'some'
-    """Only the user-defined punctuation characters are read.
+    """Only some of the user-defined punctuation characters are read."""
+    MOST = 'most'
+    """Only most of the user-defined punctuation characters are read.
 
     The set of characters is specified in Speech Dispatcher configuration.
 
@@ -973,9 +975,16 @@ class SSIPClient(object):
           scope -- see the documentation of this class.
             
         """
-        assert value in (PunctuationMode.ALL, PunctuationMode.SOME,
-                         PunctuationMode.NONE), value
+        assert value in (PunctuationMode.ALL, PunctuationMode.MOST,
+                         PunctuationMode.SOME, PunctuationMode.NONE), value
         self._conn.send_command('SET', scope, 'PUNCTUATION', value)
+
+    def get_punctuation(self):
+        """Get the punctuation pronounciation level."""
+        code, msg, data = self._conn.send_command('GET', 'PUNCTUATION')
+        if data:
+            return data[0]
+        return None
 
     def set_spelling(self, value, scope=Scope.SELF):
         """Toogle the spelling mode or on off.

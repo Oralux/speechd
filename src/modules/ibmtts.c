@@ -1090,6 +1090,7 @@ static void *_ibmtts_synth(void *nothing)
 				    eciTextModeAllSpell);
 			break;
 		case SPD_MSGTYPE_KEY:
+			/* TODO: make sure all SSIP cases are supported */
 			/* Map unspeakable keys to speakable words. */
 			DBG("voxin: Key from Speech Dispatcher: |%s|", pos);
 			pos = ibmtts_subst_keys(pos);
@@ -1228,7 +1229,7 @@ static void ibmtts_set_pitch(signed int pitch)
 
 static void ibmtts_set_punctuation_mode(SPDPunctuation punct_mode)
 {
-	const char *fmt = "`Pf%d%s ";
+	const char *fmt = " `Pf%d%s ";
 	char *msg = NULL;
 	int real_punct_mode = 0;
 
@@ -1237,6 +1238,10 @@ static void ibmtts_set_punctuation_mode(SPDPunctuation punct_mode)
 		real_punct_mode = 0;
 		break;
 	case SPD_PUNCT_SOME:
+		real_punct_mode = 2;
+		break;
+	case SPD_PUNCT_MOST:
+		/* XXX approximation */
 		real_punct_mode = 2;
 		break;
 	case SPD_PUNCT_ALL:
