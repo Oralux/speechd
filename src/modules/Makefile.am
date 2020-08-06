@@ -30,7 +30,7 @@ common_LDADD = $(SNDFILE_LIBS) $(DOTCONF_LIBS) $(GLIB_LIBS) $(GTHREAD_LIBS)
 
 AM_CFLAGS = $(ERROR_CFLAGS)
 AM_CPPFLAGS = $(inc_local) -DDATADIR=\"$(snddatadir)\" -D_GNU_SOURCE \
-	-DPLUGIN_DIR="\"$(PLUGIN_DIR)\"" \
+	-DPLUGIN_DIR="\"$(audiodir)\"" \
 	$(DOTCONF_CFLAGS) $(GLIB_CFLAGS) $(GTHREAD_CFLAGS) \
 	$(ibmtts_include) $(SNDFILE_CFLAGS)
 
@@ -74,7 +74,8 @@ modulebin_PROGRAMS += sd_ibmtts
 sd_ibmtts_SOURCES = ibmtts.c $(audio_SOURCES) $(common_SOURCES) \
 	module_utils_addvoice.c
 sd_ibmtts_LDADD = $(top_builddir)/src/common/libcommon.la \
-	$(audio_dlopen_modules) -ldl \
+	$(audio_dlopen_modules) \
+	-libmeci \
 	$(common_LDADD)
 
 if ibmtts_shim
