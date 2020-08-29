@@ -1863,7 +1863,7 @@ static void load_user_dictionary()
 	GString *filename = NULL;
 	int i = 0;
 	int dictionary_is_present = 0;
-	static guint old_index = 0;
+	static guint old_index = G_MAXUINT;
 	guint new_index;
 	const char *language = NULL;
 	const char *region = NULL;
@@ -1880,8 +1880,8 @@ static void load_user_dictionary()
 		return;
 	}
 
-	language = speechd_voice[new_index]->language;
-	region = speechd_voice[new_index]->variant;
+	language = voices[new_index].lang;
+	region = voices[new_index].variant;
 
 	/* Fix locale name for French Canadian */
 	if (!strcmp(language, "ca") && !strcmp(region, "FR")) {
@@ -1907,6 +1907,8 @@ static void load_user_dictionary()
 	g_string_printf(dirname, "%s/%s_%s", IbmttsDictionaryFolder, language,
 			region);
 	if (!g_file_test(dirname->str, G_FILE_TEST_IS_DIR)) {
+		DBG(DBG_MODNAME "%s is not a directory",
+		    dirname->str);		
 		g_string_printf(dirname, "%s/%s", IbmttsDictionaryFolder,
 				language);
 		if (!g_file_test(dirname->str, G_FILE_TEST_IS_DIR)) {
