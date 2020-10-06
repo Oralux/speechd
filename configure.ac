@@ -248,8 +248,8 @@ AC_ARG_WITH([voxin],
 	[AS_HELP_STRING([--with-voxin[[=yes|no|shim]]], [include Voxin support])],
 	[],
 	[with_voxin=check])
-AS_IF([test $with_voxin != "no"],
-	[AC_CHECK_LIB([voxin], [eciStop],
+AS_IF([test $with_voxin = yes -o $with_voxin = check],
+	[AC_CHECK_LIB([voxin], [voxToString],
 		[with_voxin=yes],
 		[AS_IF([test "$with_voxin" = yes],
 			[AC_MSG_FAILURE([Voxin is not available])])
