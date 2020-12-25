@@ -43,7 +43,7 @@ static pthread_t generic_speak_thread;
 static pid_t generic_pid;
 static sem_t generic_semaphore;
 
-static char **generic_message;
+static char *generic_message;
 static SPDMessageType generic_message_type;
 
 static int generic_position = 0;
@@ -71,6 +71,8 @@ void generic_set_punct(SPDPunctuation punct);
 
 MOD_OPTION_1_STR(GenericExecuteSynth)
     MOD_OPTION_1_STR(GenericCmdDependency)
+    MOD_OPTION_1_INT(GenericPortDependency)
+    MOD_OPTION_1_STR(GenericSoundIconFolder)
 
     MOD_OPTION_1_INT(GenericMaxChunkLength)
     MOD_OPTION_1_STR(GenericDelimiters)
@@ -111,6 +113,8 @@ int module_load(void)
 
 	MOD_OPTION_1_STR_REG(GenericExecuteSynth, "");
 	MOD_OPTION_1_STR_REG(GenericCmdDependency, "");
+	MOD_OPTION_1_INT_REG(GenericPortDependency, 0);
+	MOD_OPTION_1_STR_REG(GenericSoundIconFolder, "/usr/share/sounds/sound-icons/");
 
 	REGISTER_DEBUG();
 
@@ -158,6 +162,7 @@ int module_init(char **status_info)
 	DBG("GenericDelimiters = %s\n", GenericDelimiters);
 	DBG("GenericExecuteSynth = %s\n", GenericExecuteSynth);
 	DBG("GenericCmdDependency = %s\n", GenericCmdDependency);
+	DBG("GenericPortDependency = %u\n", GenericPortDependency);
 
 	generic_msg_language =
 	    (TGenericLanguage *) g_malloc(sizeof(TGenericLanguage));
@@ -165,7 +170,7 @@ int module_init(char **status_info)
 	generic_msg_language->charset = g_strdup("iso-8859-1");
 	generic_msg_language->name = g_strdup("english");
 
-	generic_message = g_malloc(sizeof(char *));
+	generic_message = NULL;
 
 	sem_init(&generic_semaphore, 0, 0);
 
@@ -234,16 +239,16 @@ int module_speak(gchar * data, size_t bytes, SPDMessageType msgtype)
 
 	/* TODO: use a generic engine for SPELL, CHAR, KEY */
 	if (msgtype == SPD_MSGTYPE_TEXT)
-		*generic_message = module_strip_ssml(tmp);
+		generic_message = module_strip_ssml(tmp);
 	else
-		*generic_message = g_strdup(tmp);
+		generic_message = g_strdup(tmp);
 	g_free(tmp);
 
-	module_strip_punctuation_some(*generic_message, GenericStripPunctChars);
+	module_strip_punctuation_some(generic_message, GenericStripPunctChars);
 
-	generic_message_type = SPD_MSGTYPE_TEXT;
+	generic_message_type = msgtype;
 
-	DBG("Requested data: |%s|\n", data);
+	DBG("Requested data (%d): |%s|\n", msgtype, data);
 
 	/* Send semaphore signal to the speaking thread */
 	generic_speaking = 1;
@@ -357,6 +362,28 @@ void *_generic_speak(void *nothing)
 		sem_wait(&generic_semaphore);
 		DBG("Semaphore on\n");
 
+		const char *play_command = NULL;
+		play_command = spd_audio_get_playcmd(module_audio_id);
+
+		if (play_command == NULL) {
+			DBG("This audio backend has no default play command; using \"play\"\n");
+			play_command = "play";
+		}
+
+		if (generic_message_type == SPD_MSGTYPE_SOUND_ICON) {
+			if (strchr(generic_message, '\\') ||
+			    strchr(generic_message, '\'') ||
+			    strchr(generic_message, '/')) {
+				DBG("Warning: bad icon name %s\n", generic_message);
+			}
+			char *cmd = g_strdup_printf("%s '%s/%s'", play_command, GenericSoundIconFolder, generic_message);
+			system(cmd);
+			DBG("icon command = |%s|\n", cmd);
+			free(cmd);
+			generic_speaking = 0;
+			continue;
+		}
+
 		ret = pipe(module_pipe.pc);
 		if (ret != 0) {
 			DBG("Can't create pipe pc\n");
@@ -393,7 +420,6 @@ void *_generic_speak(void *nothing)
 				char *p;
 				char *tmpdir, *homedir;
 				const char *helper;
-				const char *play_command = NULL;
 
 				helper = getenv("TMPDIR");
 				if (helper)
@@ -407,13 +433,6 @@ void *_generic_speak(void *nothing)
 				else
 					homedir =
 					    g_strdup("UNKNOWN_HOME_DIRECTORY");
-
-				play_command =
-				    spd_audio_get_playcmd(module_audio_id);
-				if (play_command == NULL) {
-					DBG("This audio backend has no default play command; using \"play\"\n");
-					play_command = "play";
-				}
 
 				/* Set this process as a process group leader (so that SIGKILL
 				   is also delivered to the child processes created by system()) */
@@ -481,7 +500,7 @@ void *_generic_speak(void *nothing)
 			/* This is the parent. Send data to the child. */
 
 			generic_position =
-			    module_parent_wfork(module_pipe, *generic_message,
+			    module_parent_wfork(module_pipe, generic_message,
 						generic_message_type,
 						GenericMaxChunkLength,
 						GenericDelimiters,

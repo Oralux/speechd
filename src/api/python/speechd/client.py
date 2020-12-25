@@ -197,7 +197,8 @@ class _SSIP_Connection(object):
         self._ssip_reply_semaphore = threading.Semaphore(0)
         self._communication_thread = \
                 threading.Thread(target=self._communication, kwargs={},
-                                 name="SSIP client communication thread")
+                                 name="SSIP client communication thread",
+                                 daemon=True)
         self._communication_thread.start()
     
     def close(self):
@@ -289,7 +290,7 @@ class _SSIP_Connection(object):
         and return the triplet (code, msg, data)."""
         # TODO: This check is dumb but seems to work.  The main thread
         # hangs without it, when the Speech Dispatcher connection is lost.
-        if not self._communication_thread.isAlive():
+        if not self._communication_thread.is_alive():
             raise SSIPCommunicationError
         self._ssip_reply_semaphore.acquire()
         # The list is sorted, read the first item

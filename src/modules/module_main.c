@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 	module_audio_id = 0;
 
 	if (argc >= 2) {
-		configfilename = g_strdup(argv[1]);
+		configfilename = argv[1];
 	}
 
 	ret = module_load();
@@ -109,8 +109,6 @@ int main(int argc, char *argv[])
 			dotconf_cleanup(configfile);
 			DBG("Configuration (pre) has been read from \"%s\"\n",
 			    configfilename);
-
-			g_free(configfilename);
 		} else {
 			DBG("Can't read specified config file!\n");
 		}
@@ -194,15 +192,15 @@ int main(int argc, char *argv[])
 		    else
 		PROCESS_CMD_W_ARGS(DEBUG, do_debug)
 		    else
-	if (!strcmp(cmd_buf, "QUIT\n")) {
-		do_quit();
-		exit(0);
-	} else {
-		printf("300 ERR UNKNOWN COMMAND\n");
-		fflush(stdout);
-	}
+		if (!strcmp(cmd_buf, "QUIT\n")) {
+			do_quit();
+			exit(0);
+		} else {
+			printf("300 ERR UNKNOWN COMMAND\n");
+			fflush(stdout);
+		}
 
-	g_free(cmd_buf);
+		g_free(cmd_buf);
 	}
 
 	module_close();

@@ -73,6 +73,7 @@ endif
 if ibmtts_support
 modulebin_PROGRAMS += sd_ibmtts
 sd_ibmtts_SOURCES = ibmtts.c $(audio_SOURCES) $(common_SOURCES) \
+	module_utils_speak_queue.c \
 	module_utils_addvoice.c
 sd_ibmtts_LDADD = $(top_builddir)/src/common/libcommon.la \
 	$(audio_dlopen_modules) \
@@ -103,7 +104,7 @@ endif
 
 if espeak_ng_support
 modulebin_PROGRAMS += sd_espeak-ng
-sd_espeak_ng_SOURCES = espeak-ng.c $(audio_SOURCES) $(common_SOURCES) module_utils_speak_queue.c
+sd_espeak_ng_SOURCES = espeak.c $(audio_SOURCES) $(common_SOURCES) module_utils_speak_queue.c
 sd_espeak_ng_CFLAGS = -DESPEAK_NG_INCLUDE $(ESPEAK_NG_CFLAGS)
 sd_espeak_ng_LDADD = $(top_builddir)/src/common/libcommon.la \
 	$(audio_dlopen_modules) \
@@ -175,12 +176,14 @@ endif
 
 if voxin_support
 modulebin_PROGRAMS += sd_voxin
-sd_voxin_SOURCES = voxin.c $(audio_SOURCES) $(common_SOURCES) \
+sd_voxin_SOURCES = ibmtts.c $(audio_SOURCES) $(common_SOURCES) \
+	module_utils_speak_queue.c \
 	module_utils_addvoice.c
 sd_voxin_LDADD = $(top_builddir)/src/common/libcommon.la \
 	$(audio_dlopen_modules) \
 	-lvoxin \
 	$(common_LDADD)
+sd_voxin_CPPFLAGS = -DVOXIN $(AM_CPPFLAGS)
 
 if voxin_shim
 sd_voxin_LDADD += -L.

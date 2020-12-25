@@ -57,7 +57,7 @@ char *module_index_mark;
 
 char *do_message(SPDMessageType msgtype)
 {
-	int ret;
+	int ret, offset;
 	char *cur_line;
 	GString *msg;
 	size_t n;
@@ -70,23 +70,27 @@ char *do_message(SPDMessageType msgtype)
 
 	while (1) {
 		cur_line = NULL;
+		offset = 0;
 		n = 0;
 		ret = spd_getline(&cur_line, &n, stdin);
 		nlines++;
 		if (ret == -1)
 			return g_strdup("401 ERROR INTERNAL");
 
-		if (!strcmp(cur_line, "..\n")) {
-			g_free(cur_line);
-			cur_line = g_strdup(".\n");
-		} else if (!strcmp(cur_line, ".\n")) {
+		if (!strcmp(cur_line, ".\n")) {
 			/* Strip the trailing \n */
 			msg->str[strlen(msg->str) - 1] = 0;
 			g_free(cur_line);
 			break;
 		}
+
+		if (cur_line[0] == '.') {
+			offset++;
+			cur_line++;
+		}
+
 		g_string_append(msg, cur_line);
-		g_free(cur_line);
+		g_free(cur_line - offset);
 	}
 
 	if ((msgtype != SPD_MSGTYPE_TEXT) && (nlines > 2)) {
@@ -229,26 +233,26 @@ char *do_set(void)
 			SET_PARAM_NUM(rate,
 				      ((number >= -100) && (number <= 100)))
 			    else
-				SET_PARAM_NUM(pitch,
-					      ((number >= -100)
-					       && (number <= 100)))
-				    else
-				SET_PARAM_NUM(pitch_range,
-					      ((number >= -100)
-					       && (number <= 100)))
-				    else
-				SET_PARAM_NUM(volume,
-					      ((number >= -100)
-					       && (number <= 100)))
-				    else
-				SET_PARAM_STR_C(punctuation_mode,
-						str2EPunctMode)
-				    else
-				SET_PARAM_STR_C(spelling_mode, str2ESpellMode)
-				    else
-				SET_PARAM_STR_C(cap_let_recogn,
-						str2ECapLetRecogn)
-				    else
+			SET_PARAM_NUM(pitch,
+				      ((number >= -100)
+				       && (number <= 100)))
+			    else
+			SET_PARAM_NUM(pitch_range,
+				      ((number >= -100)
+				       && (number <= 100)))
+			    else
+			SET_PARAM_NUM(volume,
+				      ((number >= -100)
+				       && (number <= 100)))
+			    else
+			SET_PARAM_STR_C(punctuation_mode,
+					str2EPunctMode)
+			    else
+			SET_PARAM_STR_C(spelling_mode, str2ESpellMode)
+			    else
+			SET_PARAM_STR_C(cap_let_recogn,
+					str2ECapLetRecogn)
+			    else
 			if (!strcmp(cur_item, "voice")) {
 				ret = str2EVoice(cur_value);
 				if (ret != -1)
@@ -332,22 +336,22 @@ char *do_audio(void)
 
 			SET_AUDIO_STR(audio_output_method, 0)
 			    else
-				SET_AUDIO_STR(audio_oss_device, 1)
-				    else
-				SET_AUDIO_STR(audio_alsa_device, 2)
-				    else
-				SET_AUDIO_STR(audio_nas_server, 3)
-				    else
-				      /* TODO: restore AudioPulseServer option
-				SET_AUDIO_STR(audio_pulse_server, 4)
-				    else
-				    */
-				SET_AUDIO_STR(audio_pulse_device, 4)
-				    else
-				SET_AUDIO_STR(audio_pulse_min_length, 5)
-				    else
-				/* 6 reserved for speech-dispatcher module name */
-				err = 2;	/* Unknown parameter */
+			SET_AUDIO_STR(audio_oss_device, 1)
+			    else
+			SET_AUDIO_STR(audio_alsa_device, 2)
+			    else
+			SET_AUDIO_STR(audio_nas_server, 3)
+			    else
+			      /* TODO: restore AudioPulseServer option
+			SET_AUDIO_STR(audio_pulse_server, 4)
+			    else
+			    */
+			SET_AUDIO_STR(audio_pulse_device, 4)
+			    else
+			SET_AUDIO_STR(audio_pulse_min_length, 5)
+			    else
+			/* 6 reserved for speech-dispatcher module name */
+			err = 2;	/* Unknown parameter */
 		}
 		g_free(line);
 	}
