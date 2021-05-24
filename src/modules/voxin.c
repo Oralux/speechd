@@ -44,6 +44,8 @@
    - Use SSML mark feature of ibmtts instead of handcrafted parsing.
 */
 
+#define _POSIX_C_SOURCE 199309L
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -491,12 +493,40 @@ SPDVoice **module_list_voices(void)
 int module_speak(gchar * data, size_t bytes, SPDMessageType msgtype)
 {
 	DBG(DBG_MODNAME "module_speak().");
+	{
 
-	if (is_thread_busy(&synth_suspended_mutex) ||
-	    is_thread_busy(&play_suspended_mutex) ||
-	    is_thread_busy(&stop_or_pause_suspended_mutex)) {
-		DBG(DBG_MODNAME "Already synthesizing when requested to synthesize (module_speak).");
-		return FALSE;
+	  // try to replay
+	  const int max = 10;
+	  int count = 0;
+	  int thread_busy = 1;
+	  while(count < max) {
+	    struct timespec req = {.tv_sec=0, .tv_nsec=100000000};
+	    struct timespec rem = {.tv_sec=0, .tv_nsec=0};
+	    ++count;
+
+	    if (is_thread_busy(&synth_suspended_mutex) ||
+		is_thread_busy(&play_suspended_mutex) ||
+		is_thread_busy(&stop_or_pause_suspended_mutex)) {
+		    DBG(DBG_MODNAME " [%d] Already synthesizing when requested to synthesize (module_speak).", count);
+	    } else {
+		    thread_busy = 0;
+		    break;
+	    }
+	      	    
+	    while(nanosleep(&req, &rem)) {
+	      if (errno == EINTR) {
+		      req = rem;
+		      rem = (struct timespec){.tv_sec=0,.tv_nsec=0};
+	      } else {		
+		      DBG(DBG_MODNAME " [%d] err nanosleep", count);
+		      return FALSE;
+	      }
+	    }
+	  }
+	  
+	  if (thread_busy) {
+		  return FALSE;
+	  }
 	}
 
 	DBG(DBG_MODNAME "Type: %d, bytes: %lu, requested data: |%s|\n", msgtype,
